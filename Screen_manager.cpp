@@ -38,12 +38,50 @@ void Screen_manager::print_share(){
 
     int shot_frame, create_frame, check_frame;
 
+    for (int i = 0; i < num_event; i++){
+        if (curr_frame == frame_event[i]){ //object 생성
+            switch (this->type_event[i]){
+                case 'n': {
+                    Enemy_1n *enn = new Enemy_1n(y_event[i], x_event[i], 10, 1, i, 'n');
+                    this->objects.push_back(enn);
+                    board[y_event[i]][x_event[i]] = 'n';
+                    break;
+                }
+                case 'L': {
+                    board[y_event[i]][x_event[i]] = 'L';
+                    break;
+                }
+                default:
+                    break;
+            }
+        } else if (curr_frame > frame_event[i] && this->type_event[i] != '0'){
+            switch(this->type_event[i]){
+                case 'n':{
+                    board[y_event[i]][x_event[i]] = 'n';
+                    plnenem(this->my_plane.y, this->my_plane.x);
+                    break;
+                }
+                case 'L':{
+                    if (this->my_plane.y == y_event[i] && this->my_plane.x == x_event[i]){
+                        type_event[i] = '0';
+                        this->my_plane.level ++;
+                    } else{
+                        board[y_event[i]][x_event[i]] = 'L';
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
     //Bullet part
     shot_frame = this->my_plane.shot_frame_my_plane;
     create_frame = this->my_plane.create_frame_my_plane;
     check_frame = this->my_plane.check_frame_my_plane;
     while ((curr_frame-create_frame)/shot_frame - check_frame > 0){ //bullet create
-        Bullet *bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame);
+        Bullet *bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame, this->my_plane.level);
         this->my_plane.bullet.push_back(bullet);
 
         for(auto iter=this->my_plane.bullet.begin(); iter<this->my_plane.bullet.end();){
@@ -56,8 +94,8 @@ void Screen_manager::print_share(){
                     board[(*iter)->y][(*iter)->x]=' ';
                 }
                 (*iter)->y -= shot_frame;
-                board[(*iter)->y][(*iter)->x]= bullet->symbol[bullet->level - 1];
-                bulenem((*iter)->y, (*iter)->x, bullet->damage);
+                board[(*iter)->y][(*iter)->x]= (*iter)->symbol[(*iter)->level - 1];
+                bulenem((*iter)->y, (*iter)->x, (*iter)->level);
                 iter++;
             }
         }
@@ -81,25 +119,18 @@ void Screen_manager::bulenem(int y, int x, int damage){
     }
 }
 
+void Screen_manager::plnenem(int y, int x){
+    for (auto iter = this->objects.begin(); iter < this->objects.end(); iter++){
+        if (y == (*iter)->gety() && x == (*iter)->getx()){
+            this->my_plane.hp --;
+            board[y][x] = 'M';
+        }
+    }
+}
+
 //print when key didn't pressed
 void Screen_manager::print(){
     board[this->my_plane.y][this->my_plane.x]='M';
-    for (int i = 0; i < num_event; i++){
-        if (curr_frame == frame_event[i]){ //object 생성
-            switch (this->type_event[i]){
-                case 'n': {
-                    Enemy_1n *enn = new Enemy_1n(y_event[i], x_event[i], 10, 1, i, 'n');
-                    this->objects.push_back(enn);
-                    board[y_event[i]][x_event[i]] = 'n';
-                    break;
-                }
-                default:
-                    break;
-            }
-        } else if (curr_frame > frame_event[i] && this->type_event[i] != '0'){
-            board[y_event[i]][x_event[i]] = type_event[i];
-        }
-    }
     print_share();
 }
 
