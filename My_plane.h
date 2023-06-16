@@ -26,6 +26,8 @@ class My_plane{
         vector<Bullet*> bullet;
         int hp = 5;
         int score = 0;
+        int level = 1;
+        bool powerup = false;
 };
 
 class Enemy{

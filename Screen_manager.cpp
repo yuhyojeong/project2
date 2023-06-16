@@ -51,6 +51,10 @@ void Screen_manager::print_share(){
                     board[y_event[i]][x_event[i]] = 'L';
                     break;
                 }
+                case 'P': {
+                    board[y_event[i]][x_event[i]] = 'P';
+                    break;
+                }
                 default:
                     break;
             }
@@ -70,6 +74,15 @@ void Screen_manager::print_share(){
                     }
                     break;
                 }
+                case 'P':{
+                    if (this->my_plane.y == y_event[i] && this->my_plane.x == x_event[i]){
+                        type_event[i] = '0';
+                        this->my_plane.powerup = true;
+                    } else{
+                        board[y_event[i]][x_event[i]] = 'P';
+                    }
+                    break;
+                }
                 default:
                     break;
             }
@@ -81,19 +94,31 @@ void Screen_manager::print_share(){
     create_frame = this->my_plane.create_frame_my_plane;
     check_frame = this->my_plane.check_frame_my_plane;
     while ((curr_frame-create_frame)/shot_frame - check_frame > 0){ //bullet create
-        Bullet *bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame, this->my_plane.level);
+        Bullet *bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame, this->my_plane.level, this->my_plane.powerup);
         this->my_plane.bullet.push_back(bullet);
 
         for(auto iter=this->my_plane.bullet.begin(); iter<this->my_plane.bullet.end();){
             if((*iter)->y<=0){
+                extrabullet((*iter)->y, (*iter)->x, (*iter)->powerup);
                 board[(*iter)->y][(*iter)->x]=' ';
                 this->my_plane.bullet.erase(iter);
             }
             else{
                 if(iter!=(this->my_plane.bullet.end()-1) && curr_frame!=1){ //방금 생성된 new bullet이나 발사 전만 아니면
+                    extrabullet((*iter)->y, (*iter)->x, (*iter)->powerup);
                     board[(*iter)->y][(*iter)->x]=' ';
                 }
                 (*iter)->y -= shot_frame;
+                if ((*iter)->powerup == true){
+                    if ((*iter)->x >=2){
+                        board[(*iter)->y][(*iter)->x - 1]= (*iter)->symbol[(*iter)->level - 1];
+                        bulenem((*iter)->y, (*iter)->x-1, (*iter)->level);
+                    }
+                    if ((*iter)->x <= 57){
+                        board[(*iter)->y][(*iter)->x + 1]= (*iter)->symbol[(*iter)->level - 1];
+                        bulenem((*iter)->y, (*iter)->x+1, (*iter)->level);
+                    }
+                }
                 board[(*iter)->y][(*iter)->x]= (*iter)->symbol[(*iter)->level - 1];
                 bulenem((*iter)->y, (*iter)->x, (*iter)->level);
                 iter++;
@@ -124,6 +149,17 @@ void Screen_manager::plnenem(int y, int x){
         if (y == (*iter)->gety() && x == (*iter)->getx()){
             this->my_plane.hp --;
             board[y][x] = 'M';
+        }
+    }
+}
+
+void Screen_manager::extrabullet(int y, int x, bool p){
+    if (p == true){
+        if (x >=2){
+            board[y][x - 1]=' ';
+        }
+        if (x <= 57){
+            board[y][x + 1]=' ';
         }
     }
 }
