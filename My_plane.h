@@ -37,26 +37,32 @@ class My_plane{ // hp = 5
 
 class Enemy_1n {
     public:
-        Enemy_1n(int y, int x, char sym, int order, int hp, int score, int cellspeed = 0, int createfr = 0) : y(y), x(x), sym(sym), order(order), hp(hp), score(score), cellspeed(cellspeed), createfr(createfr) {}
+        Enemy_1n(int y, int x, char sym, int order, int hp, int score, int cellspeed = 0, int createfr = 0, int damage = 1) : y(y), x(x), sym(sym), order(order), hp(hp), score(score), cellspeed(cellspeed), createfr(createfr), damage(damage) {}
         int y, x, order, hp, score, cellspeed;
         char sym;
         int createfr = 0;
         void movenemy() {y++;}
         bool movetime = false;
+        int damage = 1;
 };
 
 class Enemy_2r : public Enemy_1n{
     public:
-        Enemy_2r(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create) {}
+        Enemy_2r(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create, int damage) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create, damage) {}
 };
 
 class Enemy_3s : public Enemy_1n{
     public:
-        Enemy_3s(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create) {}
+        Enemy_3s(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create, int damage) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create, damage) {}
 };
 
 class Enemy_4d : public Enemy_1n{
     public:
-        Enemy_4d(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create) {}
+        Enemy_4d(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create, int damage) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create, damage) {}
+};
+
+class Enemy_5a : public Enemy_1n{
+    public:
+        Enemy_5a(int y, int x, char sym, int order, int hp, int score, int buffspeed, int create, int damage) : Enemy_1n(y, x, sym, order, hp, score, buffspeed, create, damage) {}
 };
 #endif

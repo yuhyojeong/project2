@@ -33,14 +33,6 @@ void Screen_manager::render(){
 
 //print sharing things.
 void Screen_manager::print_share(){
-    //종료 조건
-    if (my_plane.gethp() <= 0){
-        this->end == true;
-    }
-    if (enemy.size() == 0 && curr_frame > frame_event[num_event - 1]){
-        this->end = true;
-    }
-
     //wall
     for(int i=0; i<width; i++){board[height-1][i]='w';}
     for(int j=0; j<height; j++){board[j][0]='w'; board[j][width-1]='w';}
@@ -250,8 +242,8 @@ void Screen_manager::print_share(){
 
     for (auto itr = enemy.begin(); itr < enemy.end(); itr++){
         if ((*itr)->hp <= 0){ //적 사망
-            this->score[(*itr)->score - 1] ++;
             board[(*itr)->y][(*itr)->x] = ' ';
+            dead[(*itr)->score - 1] ++;
             enemy.erase(itr);
             itr--;
         }

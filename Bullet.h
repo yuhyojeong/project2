@@ -14,28 +14,34 @@
 
 class Bullet{
     public:
-        Bullet(int y_value, int x_value, int frame_value, int level, bool powerup, char sym = '\'') \
-        : y(y_value), x(x_value), create_frame_bullet(frame_value), level(level), powerup(powerup), sym(sym) {};
-        Bullet(int y, int x, char sym) : y(y), x(x), sym(sym) {}
+        Bullet(int y_value, int x_value, int frame_value, bool powerup, int level) \
+        : y(y_value), x(x_value), create_frame_bullet(frame_value), powerup(powerup), level(level) {};
+        Bullet(int y, int x, char sym, int order) : y(y), x(x), sym(sym), order(order) {}
+        Bullet(int y, int x, char sym, int damage, int frame) : y(y), x(x), sym(sym), damage(damage), create_frame_bullet(frame) {}
+        int damage=1;
         int y, x;
         int create_frame_bullet; //initialize when it creates
         int check_frame_bullet;
-        int level = 1;
+        int cellspeed = 1;
         char symbol[3] = {'\'', '^', '!'};
-        bool powerup;
-        char getsymbol() {return sym;}
-    private:
         char sym;
-};
-
-class Levelup_bullet: public Bullet{
-    public:
-        Levelup_bullet(int y, int x, char sym) : Bullet(y, x, sym) {}
+        int order; //event 순서
+        bool powerup = false;
+        int level = 1;
 };
 
 class Powerup_bullet : public Bullet{
     public:
-        Powerup_bullet(int y, int x, char sym) : Bullet(y, x, sym) {}
+        Powerup_bullet(int y, int x, char sym, int order) : Bullet(y, x, sym, order) {}
 };
 
+class Levelup_bullet : public Bullet{
+    public:
+        Levelup_bullet(int y, int x, char sym, int order) : Bullet(y, x, sym, order) {}
+};
+
+class Enemy_bullet : public Bullet{
+    public:
+        Enemy_bullet(int y, int x, char enemsym, int damage, int frame) : Bullet(y, x, enemsym, damage, frame) {}
+};
 #endif
