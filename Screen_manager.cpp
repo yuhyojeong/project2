@@ -99,23 +99,23 @@ void Screen_manager::print_share(){
             if ((*itr)->y == my_plane.y && (*itr)->x == my_plane.x){ //plane과 enemybullet 만나는지
                 my_plane.hpdown((*itr)->damage);
             }
-            if ((*itr)->sym == 's'){
+            if ((*itr)->sym == 's' || (*itr)->sym == 'S'){
                 board[(*itr)->y][(*itr)->x] = ' ';
                 if (board[(*itr)->y + 1][(*itr)->x] != 'w'){
                     board[(*itr)->y + 1][(*itr)->x] = '*';
-                    Enemy_bullet* sbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x, 's', (*itr)->damage, curr_frame);
+                    Enemy_bullet* sbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x, (*itr)->sym, (*itr)->damage, curr_frame);
                     enembul.insert(itr, sbul);
                     enembul.erase(itr + 1);
                 } else{
                     enembul.erase(itr);
                     itr--;
                 }
-            } else if ((*itr)->sym == 'd'){
+            } else if ((*itr)->sym == 'd' || (*itr)->sym == 'D'){
                 board[(*itr)->y][(*itr)->x] = ' ';
                 if ((*itr)->x <= 29){ //왼쪽이 더 가까움
                     if (board[(*itr)->y + 1][(*itr)->x - 1] != 'w'){
                         board[(*itr)->y + 1][(*itr)->x - 1] = '*';
-                        Enemy_bullet* dbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x - 1, 'd', (*itr)->damage, curr_frame);
+                        Enemy_bullet* dbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x - 1, (*itr)->sym, (*itr)->damage, curr_frame);
                         enembul.insert(itr, dbul);
                         enembul.erase(itr + 1);
                     } else{
@@ -125,7 +125,7 @@ void Screen_manager::print_share(){
                 } else{
                     if (board[(*itr)->y + 1][(*itr)->x + 1] != 'w'){
                         board[(*itr)->y + 1][(*itr)->x + 1] = '*';
-                        Enemy_bullet* dbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x + 1, 'd', (*itr)->damage, curr_frame);
+                        Enemy_bullet* dbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x + 1, (*itr)->sym, (*itr)->damage, curr_frame);
                         enembul.insert(itr, dbul);
                         enembul.erase(itr + 1);
                     } else{
@@ -160,17 +160,22 @@ void Screen_manager::print_share(){
                     break;
                 }
                 case 'r':{
-                    Enemy_2r* enn = new Enemy_2r(y_event[i], x_event[i], 'r', i, 5, 2, 3, frame_event[i]);
+                    Enemy_2r* enn = new Enemy_2r(y_event[i], x_event[i], 'r', i, 5, 2, 3, frame_event[i], 1);
                     enemy.push_back(enn);
                     break;
                 }
                 case 's':{
-                    Enemy_3s* enn = new Enemy_3s(y_event[i], x_event[i], 's', i, 4, 3, 9, frame_event[i]);
+                    Enemy_3s* enn = new Enemy_3s(y_event[i], x_event[i], 's', i, 4, 3, 9, frame_event[i], 1);
                     enemy.push_back(enn);
                     break;
                 }
                 case 'd':{
-                    Enemy_4d* enn = new Enemy_4d(y_event[i], x_event[i], 'd', i, 5, 4, 3, frame_event[i]);
+                    Enemy_4d* enn = new Enemy_4d(y_event[i], x_event[i], 'd', i, 5, 4, 3, frame_event[i], 1);
+                    enemy.push_back(enn);
+                    break;
+                }
+                case 'a':{
+                    Enemy_5a* enn = new Enemy_5a(y_event[i], x_event[i], 'a', i, 8, 5, 6, frame_event[i], 1);
                     enemy.push_back(enn);
                     break;
                 }
@@ -187,24 +192,48 @@ void Screen_manager::print_share(){
         board[elem->y][elem->x] = elem->sym;
     }
 
+    for (auto itr = enemy.begin(); itr < enemy.end(); itr++){ //enemy buff 주기
+        if ((*itr)->sym == 'a' || (*itr)->sym == 'A'){
+            for (auto enem = enemy.begin(); enem < enemy.end(); enem++){
+                if (enem-enemy.begin()!= itr-enemy.begin() && (*enem)->y <= (*itr)->y + 3 && (*enem)->y >= (*itr)->y - 3 && (*enem)->x <= (*itr)->x + 3 && (*enem)->x >= (*itr)->x - 3){
+                    (*enem)->damage ++;
+                    switch ((*enem)->sym){
+                        case 'n':
+                            (*enem)->sym = 'N';
+                            break;
+                        case 'r':
+                            (*enem)->sym = 'R';
+                            break;
+                        case 's':
+                            (*enem)->sym = 'S';
+                            break;
+                        case 'd':
+                            (*enem)->sym = 'D';
+                            break;
+                    }
+                }
+            }
+        }
+    }
+
     for (auto itr = enemy.begin(); itr < enemy.end(); itr++){ //enemy 이동
-        if ((*itr)->sym == 'r' || (*itr)->sym == 's' || (*itr)->sym == 'd'){
+        if ((*itr)->sym != 'n' && (*itr)->sym != 'a' && (*itr)->sym != 'N' && (*itr)->sym != 'A'){
             if ((this->curr_frame - (*itr)->createfr)/((*itr)->cellspeed)> 0){
                 board[(*itr)->y][(*itr)->x] = ' ';
                 if (board[(*itr)->y + 1][(*itr)->x] != 'w'){
                     board[(*itr)->y + 1][(*itr)->x] = (*itr)->sym;
                     Enemy_1n *enn = new Enemy_1n((*itr)->y + 1, (*itr)->x, (*itr)->sym, (*itr)->order, (*itr)->hp, (*itr)->score, (*itr)->cellspeed, curr_frame);
-                    if ((*itr)->sym == 's' && board[enn->y + 1][enn->x] != 'w'){
-                        Enemy_bullet* sbul = new Enemy_bullet(enn->y + 1, enn->x, enn->sym, 1, curr_frame);
+                    if (((*itr)->sym == 's' || (*itr)->sym == 'S') && board[enn->y + 1][enn->x] != 'w'){
+                        Enemy_bullet* sbul = new Enemy_bullet(enn->y + 1, enn->x, enn->sym, enn->damage, curr_frame);
                         enembul.push_back(sbul);
                         board[sbul->y][sbul->x] = '*';
-                    } else if ((*itr)->sym == 'd' && board[enn->y + 1][enn->x + 1] != 'w' && board[enn->y + 1][enn->x - 1] != 'w'){
+                    } else if (((*itr)->sym == 'd' || (*itr)->sym == 'D') && board[enn->y + 1][enn->x + 1] != 'w' && board[enn->y + 1][enn->x - 1] != 'w'){
                         if ((*itr)->x <= 29){ //왼쪽 벽이 더 가까움
-                            Enemy_bullet* dbul = new Enemy_bullet(enn->y + 1, enn->x - 1, enn->sym, 1, curr_frame);
+                            Enemy_bullet* dbul = new Enemy_bullet(enn->y + 1, enn->x - 1, enn->sym, enn->damage, curr_frame);
                             enembul.push_back(dbul);
                             board[dbul->y][dbul->x] = '*';
                         } else{
-                            Enemy_bullet* dbul = new Enemy_bullet(enn->y + 1, enn->x + 1, enn->sym, 1, curr_frame);
+                            Enemy_bullet* dbul = new Enemy_bullet(enn->y + 1, enn->x + 1, enn->sym, enn->damage, curr_frame);
                             enembul.push_back(dbul);
                             board[dbul->y][dbul->x] = '*';
                         }
@@ -218,7 +247,7 @@ void Screen_manager::print_share(){
             }
         }
     }
-    
+
     for (auto itr = enemy.begin(); itr < enemy.end(); itr++){
         if ((*itr)->hp <= 0){ //적 사망
             this->score[(*itr)->score - 1] ++;
