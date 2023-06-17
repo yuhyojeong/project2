@@ -9,7 +9,7 @@
 #include <chrono>
 #include <vector>
 #include "Screen_manager.h"
-#include <algorithm>
+#include <thread>
 
 using namespace std;
 
@@ -33,98 +33,47 @@ void Screen_manager::render(){
 
 //print sharing things.
 void Screen_manager::print_share(){
+    //종료 조건
+    if (my_plane.gethp() <= 0){
+        this->end == true;
+    }
+    if (enemy.size() == 0 && curr_frame > frame_event[num_event - 1]){
+        this->end = true;
+    }
+
     //wall
     for(int i=0; i<width; i++){board[height-1][i]='w';}
     for(int j=0; j<height; j++){board[j][0]='w'; board[j][width-1]='w';}
 
     int shot_frame, create_frame, check_frame;
 
-    for (int i = 0; i < num_event; i++){
-        if (curr_frame == frame_event[i]){ //object 생성
-            switch (this->type_event[i]){
-                case 'n': {
-                    Enemy_1n *enn = new Enemy_1n(y_event[i], x_event[i], 10, 1, i, 'n');
-                    this->objects.push_back(enn);
-                    board[y_event[i]][x_event[i]] = 'n';
-                    break;
-                }
-                case 'L': {
-                    board[y_event[i]][x_event[i]] = 'L';
-                    break;
-                }
-                case 'P': {
-                    board[y_event[i]][x_event[i]] = 'P';
-                    break;
-                }
-                case 'r': {
-                    Enemy_2r *enn = new Enemy_2r(y_event[i], x_event[i], 5, 2, i, 'r', 3);
-                    enn->seton();
-                    this->objects.push_back(enn);
-                    board[y_event[i]][x_event[i]] = 'r';
-                    break;
-                }
-                default:
-                    break;
-            }
-        } else if (curr_frame > frame_event[i] && this->type_event[i] != '0'){
-            switch(this->type_event[i]){
-                case 'n':{
-                    board[y_event[i]][x_event[i]] = 'n';
-                    plnenem(this->my_plane.y, this->my_plane.x);
-                    break;
-                }
-                case 'r':{
-                    board[y_event[i]][x_event[i]] = 'r';
-                    plnenem(this->my_plane.y, this->my_plane.x);
-                    break;
-                }
-                case 'L':{
-                    if (this->my_plane.y == y_event[i] && this->my_plane.x == x_event[i]){
-                        type_event[i] = '0';
-                        this->my_plane.level ++;
-                    } else{
-                        board[y_event[i]][x_event[i]] = 'L';
-                    }
-                    break;
-                }
-                case 'P':{
-                    if (this->my_plane.y == y_event[i] && this->my_plane.x == x_event[i]){
-                        type_event[i] = '0';
-                        this->my_plane.powerup = true;
-                    } else{
-                        board[y_event[i]][x_event[i]] = 'P';
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-    }
-
     //Bullet part
-    shot_frame = this->my_plane.shot_frame_my_plane;
+    shot_frame = this->my_plane.shot_frame_my_plane; // my bullet
     create_frame = this->my_plane.create_frame_my_plane;
     check_frame = this->my_plane.check_frame_my_plane;
-
-    for (auto elem : this->objects){
-        if (elem->getsymbol() == 'r'){
-            movenemy(elem);
-        }
-    }
-
     while ((curr_frame-create_frame)/shot_frame - check_frame > 0){ //bullet create
-        Bullet *bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame, this->my_plane.level, this->my_plane.powerup);
+        Bullet* bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame, this->my_plane.powerup, my_plane.level);
         this->my_plane.bullet.push_back(bullet);
 
-        for(auto iter=this->my_plane.bullet.begin(); iter<this->my_plane.bullet.end();){
+        for(auto iter=this->my_plane.bullet.begin(); iter<this->my_plane.bullet.end(); ){
+            for (auto itr = enemy.begin(); itr < enemy.end(); itr++){ //enemy와 bullet 만나는지
+                if ((*iter)->powerup == true){
+                    if (((*iter)->y == (*itr)->y) && ((*iter)->x <= (*itr)->x + 1) && ((*iter)->x >= (*itr)->x - 1)){
+                        (*itr)->hp -= (*iter)->level;
+                    }
+                } else{
+                    if ((*iter)->y == (*itr)->y && (*iter)->x == (*itr)->x){
+                        (*itr)->hp -= (*iter)->level;
+                    }
+                }
+            }
             if((*iter)->y<=0){
                 extrabullet((*iter)->y, (*iter)->x, (*iter)->powerup);
                 board[(*iter)->y][(*iter)->x]=' ';
                 this->my_plane.bullet.erase(iter);
             }
             else{
-                if(iter!=(this->my_plane.bullet.end()-1) && curr_frame!=1){ //방금 생성된 new bullet이나 발사 전만 아니면
+                if(iter!=(this->my_plane.bullet.end()-1) && curr_frame!=1){
                     extrabullet((*iter)->y, (*iter)->x, (*iter)->powerup);
                     board[(*iter)->y][(*iter)->x]=' ';
                 }
@@ -132,71 +81,180 @@ void Screen_manager::print_share(){
                 if ((*iter)->powerup == true){
                     if ((*iter)->x >=2){
                         board[(*iter)->y][(*iter)->x - 1]= (*iter)->symbol[(*iter)->level - 1];
-                        bulenem((*iter)->y, (*iter)->x-1, (*iter)->level);
                     }
                     if ((*iter)->x <= 57){
                         board[(*iter)->y][(*iter)->x + 1]= (*iter)->symbol[(*iter)->level - 1];
-                        bulenem((*iter)->y, (*iter)->x+1, (*iter)->level);
                     }
                 }
                 board[(*iter)->y][(*iter)->x]= (*iter)->symbol[(*iter)->level - 1];
-                bulenem((*iter)->y, (*iter)->x, (*iter)->level);
                 iter++;
             }
         }
-
         this->my_plane.check_frame_my_plane+=1;
         check_frame++;
     }
-    //Bullet part ends
-}
 
-void Screen_manager::bulenem(int y, int x, int damage){
-    for (auto iter = this->objects.begin(); iter < this->objects.end(); iter++){
-        if (y == (*iter)->gety() && x == (*iter)->getx()){
-            (*iter)->sethp((*iter)->gethp() - damage);
-            if ((*iter)->gethp() <= 0){
-                this->my_plane.score += (*iter)->getscore();
-                this->type_event[(*iter)->getorder()] = '0';
-                this->objects.erase(iter);
+    for (auto itr = enembul.begin(); itr < enembul.end(); itr++){ //enemy bullet
+        if ((curr_frame - (*itr)->create_frame_bullet) > 0){
+            if ((*itr)->y == my_plane.y && (*itr)->x == my_plane.x){ //plane과 enemybullet 만나는지
+                my_plane.hpdown((*itr)->damage);
+            }
+            if ((*itr)->sym == 's'){
+                board[(*itr)->y][(*itr)->x] = ' ';
+                if (board[(*itr)->y + 1][(*itr)->x] != 'w'){
+                    board[(*itr)->y + 1][(*itr)->x] = '*';
+                    Enemy_bullet* sbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x, 's', (*itr)->damage, curr_frame);
+                    enembul.insert(itr, sbul);
+                    enembul.erase(itr + 1);
+                } else{
+                    enembul.erase(itr);
+                    itr--;
+                }
+            } else if ((*itr)->sym == 'd'){
+                board[(*itr)->y][(*itr)->x] = ' ';
+                if ((*itr)->x <= 29){ //왼쪽이 더 가까움
+                    if (board[(*itr)->y + 1][(*itr)->x - 1] != 'w'){
+                        board[(*itr)->y + 1][(*itr)->x - 1] = '*';
+                        Enemy_bullet* dbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x - 1, 'd', (*itr)->damage, curr_frame);
+                        enembul.insert(itr, dbul);
+                        enembul.erase(itr + 1);
+                    } else{
+                        enembul.erase(itr);
+                        itr--;
+                    }
+                } else{
+                    if (board[(*itr)->y + 1][(*itr)->x + 1] != 'w'){
+                        board[(*itr)->y + 1][(*itr)->x + 1] = '*';
+                        Enemy_bullet* dbul = new Enemy_bullet((*itr)->y + 1, (*itr)->x + 1, 'd', (*itr)->damage, curr_frame);
+                        enembul.insert(itr, dbul);
+                        enembul.erase(itr + 1);
+                    } else{
+                        enembul.erase(itr);
+                        itr--;
+                    }
+                }
+                
             }
         }
     }
-}
+    //Bullet part ends
 
-void Screen_manager::plnenem(int y, int x){
-    for (auto iter = this->objects.begin(); iter < this->objects.end(); iter++){
-        if (y == (*iter)->gety() && x == (*iter)->getx()){
-            this->my_plane.hp --;
-            board[y][x] = 'M';
+    //object part
+    for (int i = 0; i < num_event; i++){
+        if (curr_frame == frame_event[i]){
+            board[y_event[i]][x_event[i]] = type_event[i];
+            switch (type_event[i]){
+                case 'P':{
+                    Powerup_bullet* pb = new Powerup_bullet(y_event[i], x_event[i], 'P', i);
+                    this->my_plane.buff.push_back(pb);
+                    break;
+                }
+                case 'L':{
+                    Levelup_bullet* lb = new Levelup_bullet(y_event[i], x_event[i], 'L', i);
+                    this->my_plane.buff.push_back(lb);
+                    break;
+                }
+                case 'n':{
+                    Enemy_1n* enn = new Enemy_1n(y_event[i], x_event[i], 'n', i, 10, 1);
+                    enemy.push_back(enn);
+                    break;
+                }
+                case 'r':{
+                    Enemy_2r* enn = new Enemy_2r(y_event[i], x_event[i], 'r', i, 5, 2, 3, frame_event[i]);
+                    enemy.push_back(enn);
+                    break;
+                }
+                case 's':{
+                    Enemy_3s* enn = new Enemy_3s(y_event[i], x_event[i], 's', i, 4, 3, 9, frame_event[i]);
+                    enemy.push_back(enn);
+                    break;
+                }
+                case 'd':{
+                    Enemy_4d* enn = new Enemy_4d(y_event[i], x_event[i], 'd', i, 5, 4, 3, frame_event[i]);
+                    enemy.push_back(enn);
+                    break;
+                }
+                default:
+                    break;
+            }
         }
     }
-}
 
-void Screen_manager::extrabullet(int y, int x, bool p){
-    if (p == true){
-        if (x >=2){
-            board[y][x - 1]=' ';
-        }
-        if (x <= 57){
-            board[y][x + 1]=' ';
+    for (auto elem : enemy){
+        board[elem->y][elem->x] = elem->sym;
+    }
+    for (auto elem : my_plane.buff){
+        board[elem->y][elem->x] = elem->sym;
+    }
+
+    for (auto itr = enemy.begin(); itr < enemy.end(); itr++){ //enemy 이동
+        if ((*itr)->sym == 'r' || (*itr)->sym == 's' || (*itr)->sym == 'd'){
+            if ((this->curr_frame - (*itr)->createfr)/((*itr)->cellspeed)> 0){
+                board[(*itr)->y][(*itr)->x] = ' ';
+                if (board[(*itr)->y + 1][(*itr)->x] != 'w'){
+                    board[(*itr)->y + 1][(*itr)->x] = (*itr)->sym;
+                    Enemy_1n *enn = new Enemy_1n((*itr)->y + 1, (*itr)->x, (*itr)->sym, (*itr)->order, (*itr)->hp, (*itr)->score, (*itr)->cellspeed, curr_frame);
+                    if ((*itr)->sym == 's' && board[enn->y + 1][enn->x] != 'w'){
+                        Enemy_bullet* sbul = new Enemy_bullet(enn->y + 1, enn->x, enn->sym, 1, curr_frame);
+                        enembul.push_back(sbul);
+                        board[sbul->y][sbul->x] = '*';
+                    } else if ((*itr)->sym == 'd' && board[enn->y + 1][enn->x + 1] != 'w' && board[enn->y + 1][enn->x - 1] != 'w'){
+                        if ((*itr)->x <= 29){ //왼쪽 벽이 더 가까움
+                            Enemy_bullet* dbul = new Enemy_bullet(enn->y + 1, enn->x - 1, enn->sym, 1, curr_frame);
+                            enembul.push_back(dbul);
+                            board[dbul->y][dbul->x] = '*';
+                        } else{
+                            Enemy_bullet* dbul = new Enemy_bullet(enn->y + 1, enn->x + 1, enn->sym, 1, curr_frame);
+                            enembul.push_back(dbul);
+                            board[dbul->y][dbul->x] = '*';
+                        }
+                    }
+                    enemy.insert(itr, enn);
+                    enemy.erase(itr + 1);
+                } else{
+                    enemy.erase(itr);
+                    itr--;
+                }
+            }
         }
     }
-}
-
-void Screen_manager::movenemy(Enemy* enem){
-    int create_frame = this->frame_event[enem->getorder()];
-    int check_frame = 0;
-    while ((curr_frame-create_frame)/enem->getcellspeed() - check_frame > 0){
-        if (enem->gety() >= 29){
-            board[enem->gety()][enem->getx()] = 'w';
-            this->objects.erase(find(this->objects.begin(), this->objects.end(), enem));
-        } else{
-            board[enem->gety()][enem->getx()] = ' ';
-            enem->sety(enem->gety() + 1);
-            board[enem->gety()][enem->getx()] = enem->getsymbol();
+    
+    for (auto itr = enemy.begin(); itr < enemy.end(); itr++){
+        if ((*itr)->hp <= 0){ //적 사망
+            this->score[(*itr)->score - 1] ++;
+            board[(*itr)->y][(*itr)->x] = ' ';
+            enemy.erase(itr);
+            itr--;
         }
-        check_frame++;
+    }
+
+    //object part ends
+
+    //plane part
+    board[my_plane.y][my_plane.x] = 'M';
+    
+    for (auto itr = my_plane.buff.begin(); itr < my_plane.buff.end(); itr++){ //buff 먹는지 확인
+        if (my_plane.y == (*itr)->y && my_plane.x == (*itr)->x){
+            if ((*itr)->sym == 'P'){
+                my_plane.powerup = true;
+                my_plane.buff.erase(itr);
+                itr--;
+            } else if ((*itr)->sym == 'L'){
+                my_plane.lbuff = true;
+                my_plane.buff.erase(itr);
+                itr--;
+            }
+        }
+    }
+    if (my_plane.lbuff == true){
+        my_plane.level ++;
+        my_plane.lbuff = false;
+    }
+
+    for (auto itr = enemy.begin(); itr < enemy.end(); itr++){ //적이랑 부딪히는지 확인
+        if (my_plane.y == (*itr)->y && my_plane.x == (*itr)->x){
+            my_plane.hpdown(1);
+        }
     }
 }
 
@@ -238,4 +296,15 @@ void Screen_manager::print(int ch){ //ascii
     }
 
     print_share();
+}
+
+void Screen_manager::extrabullet(int y, int x, bool p){
+    if (p == true){
+        if (x >=2){
+            board[y][x - 1]=' ';
+        }
+        if (x <= 57){
+            board[y][x + 1]=' ';
+        }
+    }
 }

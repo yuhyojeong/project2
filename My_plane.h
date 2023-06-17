@@ -15,52 +15,48 @@
 
 using namespace std;
 
-class My_plane{
+class My_plane{ // hp = 5
     public:
         My_plane(int y_value, int x_value, int frame_value) \
         : y(y_value), x(x_value), create_frame_my_plane(frame_value) {};
         int y, x;
-        int shot_frame_my_plane=1; //몇 frame마다 bullet 생성하는지
+        int shot_frame_my_plane=1;
         int create_frame_my_plane; //initialize when it creates
-        int check_frame_my_plane=0; //previous value of (curr-create) / shot
+        int check_frame_my_plane=0;
         vector<Bullet*> bullet;
-        int hp = 5;
-        int score = 0;
-        int level = 1;
-        bool powerup = false;
         vector<Bullet*> buff;
-};
-
-class Enemy{
-    public:
-        Enemy(int y, int x, int hp, int score, int order, char symbol, int cellspeed) : y(y), x(x), hp(hp), score(score), order(order), symbol(symbol), cellspeed(cellspeed) {}
-        Enemy(int y, int x, int hp, int score, int order, char symbol) : y(y), x(x), hp(hp), score(score), order(order), symbol(symbol) {}
-        int gety() {return y;}
-        void sety(int i) {y = i;}
-        int getx() {return x;}
+        bool powerup = false;
+        int level = 1;
+        bool lbuff = false;
+        void hpdown(int i) {hp -= i;}
         int gethp() {return hp;}
-        void sethp(int i) {hp = i;}
-        int getorder() {return order;}
-        int getscore() {return score;}
-        char getsymbol() {return symbol;}
-        void seton() {on = true;}
-        bool geton() {return on;}
-        int getcellspeed() {return cellspeed;}
 
     private:
-    int y, x, hp, order, score, cellspeed;
-    bool on = false;
-    char symbol;
+        int hp = 10;
 };
 
-class Enemy_1n : public Enemy{
+class Enemy_1n {
     public:
-        Enemy_1n(int y, int x, int hp, int score, int order, char symbol) : Enemy(y, x, hp, score, order, symbol) {}
-
+        Enemy_1n(int y, int x, char sym, int order, int hp, int score, int cellspeed = 0, int createfr = 0) : y(y), x(x), sym(sym), order(order), hp(hp), score(score), cellspeed(cellspeed), createfr(createfr) {}
+        int y, x, order, hp, score, cellspeed;
+        char sym;
+        int createfr = 0;
+        void movenemy() {y++;}
+        bool movetime = false;
 };
 
-class Enemy_2r : public Enemy{
+class Enemy_2r : public Enemy_1n{
     public:
-        Enemy_2r(int y, int x, int hp, int score, int order, char symbol, int cellspeed) : Enemy(y, x, hp, score, order, symbol, cellspeed) {}
+        Enemy_2r(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create) {}
+};
+
+class Enemy_3s : public Enemy_1n{
+    public:
+        Enemy_3s(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create) {}
+};
+
+class Enemy_4d : public Enemy_1n{
+    public:
+        Enemy_4d(int y, int x, char sym, int order, int hp, int score, int cellspeed, int create) : Enemy_1n(y, x, sym, order, hp, score, cellspeed, create) {}
 };
 #endif
