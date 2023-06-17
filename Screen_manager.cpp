@@ -9,6 +9,7 @@
 #include <chrono>
 #include <vector>
 #include "Screen_manager.h"
+#include <algorithm>
 
 using namespace std;
 
@@ -55,6 +56,13 @@ void Screen_manager::print_share(){
                     board[y_event[i]][x_event[i]] = 'P';
                     break;
                 }
+                case 'r': {
+                    Enemy_2r *enn = new Enemy_2r(y_event[i], x_event[i], 5, 2, i, 'r', 3);
+                    enn->seton();
+                    this->objects.push_back(enn);
+                    board[y_event[i]][x_event[i]] = 'r';
+                    break;
+                }
                 default:
                     break;
             }
@@ -62,6 +70,11 @@ void Screen_manager::print_share(){
             switch(this->type_event[i]){
                 case 'n':{
                     board[y_event[i]][x_event[i]] = 'n';
+                    plnenem(this->my_plane.y, this->my_plane.x);
+                    break;
+                }
+                case 'r':{
+                    board[y_event[i]][x_event[i]] = 'r';
                     plnenem(this->my_plane.y, this->my_plane.x);
                     break;
                 }
@@ -93,6 +106,13 @@ void Screen_manager::print_share(){
     shot_frame = this->my_plane.shot_frame_my_plane;
     create_frame = this->my_plane.create_frame_my_plane;
     check_frame = this->my_plane.check_frame_my_plane;
+
+    for (auto elem : this->objects){
+        if (elem->getsymbol() == 'r'){
+            movenemy(elem);
+        }
+    }
+
     while ((curr_frame-create_frame)/shot_frame - check_frame > 0){ //bullet create
         Bullet *bullet = new Bullet(this->my_plane.y-1+shot_frame, this->my_plane.x, check_frame, this->my_plane.level, this->my_plane.powerup);
         this->my_plane.bullet.push_back(bullet);
@@ -161,6 +181,22 @@ void Screen_manager::extrabullet(int y, int x, bool p){
         if (x <= 57){
             board[y][x + 1]=' ';
         }
+    }
+}
+
+void Screen_manager::movenemy(Enemy* enem){
+    int create_frame = this->frame_event[enem->getorder()];
+    int check_frame = 0;
+    while ((curr_frame-create_frame)/enem->getcellspeed() - check_frame > 0){
+        if (enem->gety() >= 29){
+            board[enem->gety()][enem->getx()] = 'w';
+            this->objects.erase(find(this->objects.begin(), this->objects.end(), enem));
+        } else{
+            board[enem->gety()][enem->getx()] = ' ';
+            enem->sety(enem->gety() + 1);
+            board[enem->gety()][enem->getx()] = enem->getsymbol();
+        }
+        check_frame++;
     }
 }
 

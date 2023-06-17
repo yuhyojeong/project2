@@ -28,20 +28,28 @@ class My_plane{
         int score = 0;
         int level = 1;
         bool powerup = false;
+        vector<Bullet*> buff;
 };
 
 class Enemy{
     public:
+        Enemy(int y, int x, int hp, int score, int order, char symbol, int cellspeed) : y(y), x(x), hp(hp), score(score), order(order), symbol(symbol), cellspeed(cellspeed) {}
         Enemy(int y, int x, int hp, int score, int order, char symbol) : y(y), x(x), hp(hp), score(score), order(order), symbol(symbol) {}
         int gety() {return y;}
+        void sety(int i) {y = i;}
         int getx() {return x;}
         int gethp() {return hp;}
         void sethp(int i) {hp = i;}
         int getorder() {return order;}
         int getscore() {return score;}
+        char getsymbol() {return symbol;}
+        void seton() {on = true;}
+        bool geton() {return on;}
+        int getcellspeed() {return cellspeed;}
 
     private:
-    int y, x, hp, order, score;
+    int y, x, hp, order, score, cellspeed;
+    bool on = false;
     char symbol;
 };
 
@@ -49,5 +57,10 @@ class Enemy_1n : public Enemy{
     public:
         Enemy_1n(int y, int x, int hp, int score, int order, char symbol) : Enemy(y, x, hp, score, order, symbol) {}
 
+};
+
+class Enemy_2r : public Enemy{
+    public:
+        Enemy_2r(int y, int x, int hp, int score, int order, char symbol, int cellspeed) : Enemy(y, x, hp, score, order, symbol, cellspeed) {}
 };
 #endif
