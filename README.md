@@ -1,2 +1,1 @@
-# project2
-#2021-13360 유효정
+# project2, programming methodology
